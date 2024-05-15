@@ -1,0 +1,551 @@
+﻿@inject NavigationManager NavigationManager
+@using AssociationEntities.Models;
+@using WebsiteDemo.Models
+@using WebsiteDemo.Components;
+
+@* @page "/" *@
+@page "/Content/{TenantId}"
+@page "/Content/{TenantId}/{MenuName?}/{ResourcePath?}"
+@page "/Content/{TenantId}/{ParentMenu?}/{MenuName?}/{ResourcePath?}"
+@page "/Content/{TenantId}/{ParentMenu?}/{MenuName?}/{ChildMenu?}/{ResourcePath?}"
+
+
+@*  @page "/{TenantId}/{ResourcePath?}" *@
+
+
+<style>
+    .line-clamp-1 {
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        /* For Firefox */
+        display: -moz-box;
+        -moz-box-orient: vertical;
+        max-height: calc(1.5em * 3); /* Adjust based on line height */
+        white-space: nowrap; /* Prevents wrapping of text */
+        text-overflow: ellipsis; /* Adds ellipsis for overflow */
+    }
+
+    .line-clamp-2 {
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        /* For Firefox */
+        display: -moz-box;
+        -moz-box-orient: vertical;
+        max-height: calc(1.5em * 3); /* Adjust based on line height */
+        white-space: nowrap; /* Prevents wrapping of text */
+        text-overflow: ellipsis; /* Adds ellipsis for overflow */
+    }
+
+    .line-clamp-3 {
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        /* For Firefox */
+        display: -moz-box;
+        -moz-box-orient: vertical;
+        max-height: calc(1.5em * 3); /* Adjust based on line height */
+        white-space: nowrap; /* Prevents wrapping of text */
+        text-overflow: ellipsis; /* Adds ellipsis for overflow */
+    }
+
+    .container-blog {
+        height: 200px;
+    @* //border: 1px solid red; *@
+    }
+
+    .event-container {
+        border-radius: 10px;
+        height: 100%;
+        max-width: 100%;
+        max-height: 100%;
+        background-image: linear-gradient(to top, rgba(0, 0, 0, 1) 0%, rgb(6 6 6 / 64%) 100%), url(https://res.cloudinary.com/dzax35hss/image/upload/v1707464251/cld-sample-3.jpg);
+        background-size: cover;
+        background-position: center;
+        position: relative;
+    }
+
+    .info {
+        color: white;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        padding: 1rem;
+    }
+
+    .event-title {
+        width: 100%;
+        margin: 0 0 .5rem 0;
+        font-size: 150%;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+    }
+</style>
+
+@code {
+    string uri = "";
+    protected async override Task OnParametersSetAsync()
+    {
+
+        base.OnParametersSet();
+        await GetPageId();
+        await FetchRows();
+        uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri).AbsolutePath.ToString().Split("11")[1];
+
+
+    }
+}
+
+<nav class="flex px-5 py-3 text-gray-700 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700" aria-label="Breadcrumb">
+    <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
+        <li class="inline-flex items-center">
+            <a href="content/11" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white">
+                <svg class="w-3 h-3 me-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="m19.707 9.293-2-2-7-7a1 1 0 0 0-1.414 0l-7 7-2 2a1 1 0 0 0 1.414 1.414L2 10.414V18a2 2 0 0 0 2 2h3a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h3a2 2 0 0 0 2-2v-7.586l.293.293a1 1 0 0 0 1.414-1.414Z" />
+                </svg>
+                Home
+            </a>
+        </li>
+        @foreach (var crumb in breadcrumbs)
+        {
+            <li>
+                @if (crumb.Link != null)
+                {
+
+
+                    <div class="flex items-center">
+                        <svg class="rtl:rotate-180 block w-3 h-3 mx-1 text-gray-400 " aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4" />
+                        </svg>
+                        <a href="@crumb.Link" class="ms-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ms-2 dark:text-gray-400 dark:hover:text-white">@crumb.Text.Replace("%20", "")</a>
+                    </div>
+
+                }
+                else
+                {
+                    @crumb.Text
+                }
+            </li>
+        }
+    </ol>
+</nav>
+
+
+@* <Breadcrumbs CrumbPaths="@uri" /> *@
+
+<div class="flex justify-between items-start">
+    <div class="d-none d-lg-block" style="width:120px;height:728px;margin:.5rem;">
+        <img src="https://res.cloudinary.com/dzax35hss/image/upload/v1715155420/Untitled_design_5_lnjgxh.png" style="max-width:100%">
+    </div>
+    <div id="rows" class="w-full lg:w-10/12 custom-rows">
+        @* Showing existing rows, containers, components  *@
+        @foreach (var row in rows)
+        {
+            <div class="mt-2 p-0">
+
+                @if (row.Containers.Count == 0)
+                {
+                    <div style="width:100%;height:10rem;" class="my-3">
+                    </div>
+                }
+
+                @if (row.Containers.Count != 0)
+                {
+                    @foreach (var container in row.Containers)
+                    {
+                        int NoofContainers = container.NoofContainers;
+
+                        @if (NoofContainers > 0)
+                        {
+                            <div class="@GetGridClass(NoofContainers) grid gap-4 h-auto px-5 py-3 custom-row">
+
+                                @{
+                                    int componentCount = 1;
+                                }
+
+                                @foreach (var component in container.Components)
+                                {
+
+
+                                    @if (component.ComponentId > 0 && component.OrderNumber == componentCount && component.ComponentProperties.Count > 0)
+                                    {
+                                        if (component.ComponentType == "ContactPerson")
+                                        {
+                                            Contact selectedItem = new Contact();
+                                            selectedItem.Name = component.ComponentProperties.Where(x => x.Key == "Name").FirstOrDefault().Value;
+                                            selectedItem.PhoneNumber = component.ComponentProperties.Where(x => x.Key == "PhoneNumber").FirstOrDefault().Value;
+                                            selectedItem.EmailAddress = component.ComponentProperties.Where(x => x.Key == "EmailAddress").FirstOrDefault().Value;
+                                            selectedItem.AvatarImageUrl = component.ComponentProperties.Where(x => x.Key == "AvatarImageUrl").FirstOrDefault().Value;
+                                            string Description = component.ComponentProperties.Where(x => x.Key == "Description").FirstOrDefault().Value;
+
+
+                                            <div class="p-3 flex flex-col justify-center items-center w-100 rounded-2xl shadow-xl component">
+                                                <img src="@selectedItem.AvatarImageUrl" class="contact-person-profile-image" />
+                                                <h5 class="mt-3 font-bold text-lg"> @selectedItem.Name </h5>
+                                                <p class="line-clamp-2 text-ellipsis text-sm mt-2 text-gray-800 text-center">
+                                                    @Description
+                                                </p>
+                                                <div class="flex flex-wrap justify-center mt-2 ">
+                                                    <p class="mt-1 text-sm mr-2">
+                                                        <i class="fas fa-phone"></i>
+                                                        @selectedItem.PhoneNumber
+                                                    </p>
+                                                    <p class="mt-1 text-sm overflow-hidden">
+                                                        <i class="far fa-envelope"></i>
+                                                        @selectedItem.EmailAddress
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                        }
+
+                                        else if (component.ComponentType == "EventDetail")
+                                        {
+                                            EventModel Events = new EventModel();
+                                            Events.EventName = component.ComponentProperties.Where(x => x.Key == "EventName").FirstOrDefault().Value;
+                                            Events.CreatorName = component.ComponentProperties.Where(x => x.Key == "CreatorName").FirstOrDefault().Value;
+                                            Events.EventStartTime = DateTime.Parse(component.ComponentProperties.Where(x => x.Key == "EventStartTime").FirstOrDefault().Value);
+                                            Events.EventType = component.ComponentProperties.Where(x => x.Key == "EventType").FirstOrDefault().Value;
+
+
+                                            <div class="flex flex-col justify-center items-start w-100 rounded-2xl shadow-xl component">
+                                                <div class="h-36 overflow-hidden">
+                                                    <img src="https://res.cloudinary.com/dzax35hss/image/upload/v1707464251/cld-sample-3.jpg" class="block">
+                                                </div>
+                                                <div class="p-3 w-full	">
+                                                    <h4 class="font-extrabold line-clamp-1 text-ellipsis">
+                                                        @Events.EventName
+                                                    </h4>
+                                                    <h6 class="text-sm text-gray-500  mt-1">
+                                                        <i class="fas fa-calendar-alt"></i>
+                                                        @Events.EventStartTime.ToString("MM/dd/yyyy")
+                                                    </h6>
+                                                    <p class="text-sm mt-2 line-clamp-2 text-ellipsis">
+                                                        @((MarkupString)Events.EventDescription)
+                                                    </p>
+                                                    <div class="flex justify-between items-center mt-1 flex-wrap">
+                                                        <span class="text-sm bg-gray-800 px-2 rounded-3xl text-white block mt-1">@Events.EventType</span>
+                                                        <div class="text-gray-500 text-sm mt-1">
+                                                            <i class="fas fa-user-circle"></i>
+                                                            @Events.CreatorName
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+
+                                        }
+                                        else if (component.ComponentType == "BlogDetail")
+                                        {
+                                            string BlogId = GetValueOrDefault(component, "BlogId");
+
+                                            BlogPagesModel Blog = GetBlogDetailsById(BlogId);
+
+
+
+                                            <div class="flex flex-col justify-center items-start w-100 rounded-2xl shadow-xl component">
+                                                <div class="h-36 overflow-hidden">
+                                                    <img src="@Blog.HeaderImage" class="block">
+                                                </div>
+                                                <div class="p-3 w-full">
+                                                    <h4 class="font-extrabold line-clamp-1 text-ellipsis">
+                                                        @Blog.Title
+                                                    </h4>
+                                                    <h6 class="text-sm text-gray-500  mt-1">
+                                                        <i class="fas fa-history"></i>
+                                                        Posted on
+                                                        @Blog.CreatedAt
+                                                    </h6>
+                                                    <p class="text-sm mt-2 line-clamp-2 text-ellipsis">
+                                                        @((MarkupString)Blog.Description)
+                                                    </p>
+                                                    <div class="flex justify-end items-center mt-1 flex-wrap">
+
+                                                        <div class="text-gray-500 text-sm mt-1">
+                                                            <i class="fas fa-user-circle"></i>
+                                                            The Author
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+
+
+                                        }
+                                        else if (component.ComponentType == "FreeText")
+                                        {
+                                            string text = component.ComponentProperties.Where(x => x.Key == "Text").FirstOrDefault().Value;
+                                            <div class="p-2 component">
+
+                                                <div class="flex flex-column justify-between align-center">
+                                                    <p class="text-justify indent-8 p-2">
+                                                        @text
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        }
+                                        else if (component.ComponentType == "BlankSpace")
+                                        {
+                                            string Height = component.ComponentProperties.Where(x => x.Key == "Height").Select(x => x.Value).FirstOrDefault() ?? "150px";
+                                            string Width = component.ComponentProperties.Where(x => x.Key == "Width").Select(x => x.Value).FirstOrDefault() ?? "100%";
+                                            <div class="p-2 component">
+
+                                                <div class="flex flex-column justify-between align-center">
+                                                    <div style="min-height: @Height; width : @Width;">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                        else if (component.ComponentType == "Image")
+                                        {
+                                            string image = component.ComponentProperties.Where(x => x.Key == "image").Select(x => x.Value).FirstOrDefault() ?? "";
+                                            <div class="p-2 component">
+                                                <div class="flex h-52 justify-center overflow-hidden rounded-lg border border-b-slate-600 align-middle">
+                                                    <img src="@image" class="object-contain" />
+                                                </div>
+                                            </div>
+                                        }
+                                        else if (component.ComponentType == "HTMLEditor")
+
+                                        {
+                                            string HTMLContent = component.ComponentProperties.Where(x => x.Key == "HTMLContent").Select(x => x.Value).FirstOrDefault() ?? "";
+                                            <div class="p-2 component">
+
+                                                <div class="flex flex-column justify-between align-center">
+                                                    <p class="text-justify indent-8 p-2">
+                                                        @((MarkupString)HTMLContent)
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        }
+
+                                        else if (component.ComponentType == "EventList")
+                                        {
+
+                                            string divisionIds = component.ComponentProperties.Where(x => x.Key == "divisionIds").Select(x => x.Value).FirstOrDefault() ?? "";
+                                            string disciplineIds = component.ComponentProperties.Where(x => x.Key == "disciplineIds").Select(x => x.Value).FirstOrDefault() ?? "";
+                                            string tagIds = component.ComponentProperties.Where(x => x.Key == "tagIds").Select(x => x.Value).FirstOrDefault() ?? "";
+                                            string creatorIds = component.ComponentProperties.Where(x => x.Key == "creatorIds").Select(x => x.Value).FirstOrDefault() ?? "";
+
+                                            AssociationEntities.CustomModels.EventFilters eventFilters = new AssociationEntities.CustomModels.EventFilters();
+
+                                            eventFilters.DivisionsIds.Add(divisionIds);
+                                            eventFilters.DisciplinesIds.Add(disciplineIds);
+                                            eventFilters.TagIds.Add(tagIds);
+
+                                            <div class="component">
+                                                <EventList EventFilters="eventFilters"></EventList>
+                                            </div>
+                                        }
+
+                                        else if (component.ComponentType == "BlogList")
+                                        {
+
+                                            string divisionIds = GetValueOrDefault(component, "divisionIds");
+                                            string disciplineIds = GetValueOrDefault(component, "disciplineIds");
+                                            string tagIds = GetValueOrDefault(component, "tagIds");
+                                            string creatorIds = GetValueOrDefault(component, "creatorIds");
+
+                                            AssociationEntities.CustomModels.BlogFilters blogFilters = new AssociationEntities.CustomModels.BlogFilters
+                                        {
+                                            TenantId = Convert.ToInt32(tenantId),
+                                            DivisionsIds = divisionIds,
+                                            DisciplinesIds = disciplineIds,
+                                            TagIds = tagIds,
+                                        };
+
+                                            <div class="component">
+                                                <BlogLists BlogFilters="blogFilters"></BlogLists>
+                                            }
+
+                                            <div class="text-center component">
+                                                <img src="@avatarUrl" class="object-contain mx-auto" />
+                                                <small class="mt-2 text-gray-500">@name</small>
+                                            </div>
+                                        }
+
+                                    }
+                                    @* else
+                {
+                <div class="p-2 ">
+                <div class="flex flex-column justify-between align-center">
+                <div style="min-height: 10rem ; width : 100%;">
+                </div>
+                </div>
+                </div>
+                }
+                *@
+
+                                    componentCount++;
+
+
+                                }
+                            </div>
+                        }
+
+                    }
+                }
+            </div>
+        }
+    </div>
+    <div class="d-none d-lg-block" style="width:120px;height:728px;margin:.5rem;">
+        <img src="https://res.cloudinary.com/dzax35hss/image/upload/v1715158595/Untitled_design_6_fnwdnp.png" style="max-width:100%">
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    // Array containing different ad sizes with width and height
+    var adSizes = [
+        { width: 970, height: 90 },
+        { width: 728, height: 90 },
+        { width: 320, height: 50 },
+        { width: 300, height: 250 },
+        { width: 336, height: 280 },
+        { width: 200, height: 200 },
+        { width: 160, height: 600 },
+        { width: 120, height: 600 },
+        { width: 300, height: 600 }
+    ];
+
+    // Array containing URLs of ad images
+    var ads = [
+        'https://res.cloudinary.com/dzax35hss/image/upload/v1715316743/5_pzyeln.png',
+        'https://res.cloudinary.com/dzax35hss/image/upload/v1715316743/4_btpdnq.png',
+        'https://res.cloudinary.com/dzax35hss/image/upload/v1715316743/3_vt5rlg.png',
+        'https://res.cloudinary.com/dzax35hss/image/upload/v1715316743/1_q7i3pg.png',
+        'https://res.cloudinary.com/dzax35hss/image/upload/v1715316743/2_kb08ra.png'
+    ];
+
+    // Function to insert ads into the HTML structure
+    function insertAds() {
+        // Get the width and height of the browser window
+        var width = window.innerWidth;
+        var height = window.innerHeight;
+
+        // Variables to store the dimensions of the selected ad
+        var adWidth = "";
+        var adHeight = "";
+
+        // Loop through each ad size to find the appropriate size for the window width
+        for (var i = 0; i < adSizes.length; i++) {
+            var screenSize = adSizes[i];
+
+            // Check if the window width is greater than the current ad size width
+            if (width > screenSize.width) {
+                // Set the ad width and height
+                adWidth = screenSize.width + "px";
+                adHeight = screenSize.height + "px";
+                // Break the loop since we found the appropriate size
+                break;
+            }
+        }
+
+        // Get the row element where ads will be inserted
+        var row = document.querySelector('#rows');
+        // Get the children of the row element
+        var divs = row.children;
+
+        // Loop through the children and insert ads after every two divs
+        for (var i = 2; i < divs.length; i += 3) {
+            // Create a div element for the ad
+            var adDiv = document.createElement('div');
+            // Set classes and styles for the ad div
+            adDiv.className = 'my-3 mx-2 border flex items-center justify-center ad';
+
+            // Create an img element for the ad
+            var adImg = document.createElement('img');
+            // adding class for image tag
+            adImg.className = "img-fluid";
+            // Set the src attribute of the img element to a random ad URL from the ads array
+            adImg.src = ads[Math.floor(Math.random() * ads.length)];
+            adImg.style.maxWidth = '100%';
+            // Append the img element to the ad div
+            adDiv.appendChild(adImg);
+            // Insert the ad div after every two divs
+            row.insertBefore(adDiv, divs[i].nextSibling);
+        }
+
+        // Insert an ad at the start if there are existing child elements
+        if (divs.length > 0) {
+            // Create a div element for the ad at the start
+            var adDivStart = document.createElement('div');
+            // Set classes and styles for the ad div at the start
+            adDivStart.className = 'my-3 mx-2 border flex items-center justify-center ad';
+
+            // Create an img element for the ad at the start
+            var adImgStart = document.createElement('img');
+            // adding class for image tag
+            adImg.className = "img-fluid";
+            // Set the src attribute of the img element to a random ad URL from the ads array
+            adImgStart.src = ads[Math.floor(Math.random() * ads.length)];
+            adImgStart.style.maxWidth = '100%';
+            // Append the img element to the ad div at the start
+            adDivStart.appendChild(adImgStart);
+            // Insert the ad div at the start
+            row.insertBefore(adDivStart, divs[0]);
+        }
+    }
+
+
+    function adjustComponentHeight() {
+
+
+
+        console.log("Running");
+        // Select all rows within the parent container with the class "custom-row"
+        var customRow = document.querySelectorAll('.custom-row');
+
+        // Iterate through each row
+        customRow.forEach(function (row) {
+            console.log("row");
+
+            // Select all components within the current row
+            var components = row.querySelectorAll('.component');
+            // Initialize a variable to store the maximum height
+            var maxHeight = 0;
+
+            // Find the maximum height among components within the row
+            components.forEach(function (component) {
+                console.log("components");
+                // Get the height of the current component
+                var height = component.offsetHeight;
+                // Update the maxHeight if the height of the current component is greater
+                if (height > maxHeight) {
+                    maxHeight = height;
+                }
+            });
+
+            var importantHeight = "";
+            // If the maximum height is greater than 250px, set it to 250px
+            if (maxHeight > 250) {
+                maxHeight = 250;
+                importantHeight = maxHeight + 'px';
+            } else {
+                importantHeight = maxHeight + 'px';
+            }
+
+            // Assign the maximum height to all components within the row
+            components.forEach(function (component) {
+                console.log(importantHeight);
+                console.log(component);
+                // Set the height of each component to the maxHeight
+                component.style.height = importantHeight;
+                component.className = component.className + " overflow-hidden";
+            });
+        });
+
+
+    }
+
+
+
+</script>
